@@ -177,10 +177,13 @@ gradlew.bat :charlla-api:test -PincludeExternal --tests "*CharllaUploadIT" -i
 | `GET /api/account` | 200. `callbackUrl` 수신 |
 | `GET /api/contents` | 200. 페이징 필드 정상 매핑 |
 | 업로드 전송 | 성공. `{"error":0,"message":"Successfully uploaded."}` + 진행률 100% |
+| JSP 화면(8081) | 목록·업로드 화면 정상 렌더 |
+| React 화면(3000) | 정상 렌더. Next 14 앱에 이식해 확인 (전제는 §2) |
+| Next rewrites 프록시 | 통과. `3000 /api/charlla/contents` → `8080` → 200 |
 
 ### 막혀 있는 것
 
-**업로드는 성공하는데 콘텐츠가 생성되지 않는다.** (2026-08-15 기준, 미해결)
+**업로드는 성공하는데 콘텐츠가 생성되지 않는다.** (2026-08-18 재확인, 미해결)
 
 확인된 사실만 적는다.
 
@@ -192,6 +195,17 @@ gradlew.bat :charlla-api:test -PincludeExternal --tests "*CharllaUploadIT" -i
 - 콜백도 **0건**이다. 계정에 등록된 `callbackUrl`이 `external-api.charlla.io/api/callback`
   (찰나 자기 자신)이라 우리 서버로 올 수가 없다
 
+2026-08-18 재확인 — **화면 경로를 바꿔도 같다.**
+
+- React 화면(3000)에서 `sample/sample-10s.mp4`(10초, 1.0MB)로 업로드했다.
+  전송 100% + `uploadFileKey = 20260817-e13ab9d2d1df044c` 까지 정상이고 그 뒤가 없다.
+  **JSP·통합테스트에 이어 React 경로에서도 동일** → 화면 구현과 무관하다는 근거가 하나 더 늘었다
+- 업로드 직후 15초 간격 3분 폴링, 내내 `count: 0`
+- `GET /api/account` 의 `callbackUrl` 이 `https://external-api.charlla.io/api/callback` 임을
+  이번에도 실측 확인했다. 값이 바뀌지 않았다
+- `uploadFileKey` 의 날짜 접두사가 `20260817` 로, 업로드 시각(로컬 08-18)과 하루 다르다.
+  찰나 서버 타임존으로 보이며 조회 조건(start/end)을 걸 때 주의가 필요하다
+
 그래서 `CharllaUploadIT` 의 3번(콘텐츠 조회)·4번(플레이어 URL)은 통과할 수 없고,
 화면 업로드도 "인코딩 대기 중"에서 멈춘다. **찰나 담당자 확인이 필요하다.**
 
@@ -202,6 +216,7 @@ gradlew.bat :charlla-api:test -PincludeExternal --tests "*CharllaUploadIT" -i
 > 계정의 callbackUrl 이 `external-api.charlla.io/api/callback` 으로 되어 있는데 정상 기본값인가요?
 > 이 계정이 콘텐츠 등록/인코딩까지 활성화된 상태인지 확인 부탁드립니다.
 > uploadFileKey: 20260814-c5c350490b86fd46 / 20260814-d9f04f1c3be3e379 / 20260814-955bd38278ba5f07
+> / 20260817-e13ab9d2d1df044c (2026-08-18 업로드분)
 
 ### 다음에 할 일
 
@@ -212,7 +227,8 @@ gradlew.bat :charlla-api:test -PincludeExternal --tests "*CharllaUploadIT" -i
 - [ ] `sort`/`order` 실제 정렬 동작 확인 (콘텐츠 2건 이상 필요)
 - [ ] `open`/`share` 이벤트 payload 실측 — `url`/`target` 인지 `link` 인지 (`types.ts` 주석)
 - [ ] 60초 초과 영상으로 `EXCESS_DURATION` 콜백 확인 (`sample/sample-70s.mp4` 필요)
-- [ ] React 화면을 실제 Next.js 앱에 이식해 재생 확인
+- [ ] React 화면을 실제 Next.js 앱에 이식해 **재생** 확인
+      — 이식·렌더·업로드까지는 2026-08-18 확인. 재생만 콘텐츠가 없어 미확인
 
 ---
 
