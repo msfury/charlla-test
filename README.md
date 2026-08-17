@@ -32,7 +32,7 @@
 |---|---|---|
 | JDK | **11** | `gradle.properties`의 `org.gradle.java.home`이 JAVA_HOME보다 우선해 고정한다 |
 | Gradle | **7.6.4** | 래퍼에 고정. Boot 2.7.5는 6.8/6.9/7.x만 지원한다. **IDE가 업그레이드를 권해도 따르지 말 것** |
-| Node.js | React 화면을 볼 때만 | `charlla-react`는 Gradle 빌드에 포함되지 않는다(`settings.gradle`) |
+| Node.js | **18 이상** (React 화면을 볼 때) | `charlla-react`는 Gradle이 아니라 npm으로 띄운다(`settings.gradle`) |
 
 Gradle은 따로 설치하지 않는다. `gradlew.bat`이 7.6.4를 받아 쓴다.
 
@@ -53,9 +53,9 @@ gradlew.bat build
 |---|---|---|
 | `charlla-api` | `gradlew.bat :charlla-api:bootRun` | http://localhost:8080 |
 | `charlla-jsp` | `gradlew.bat :charlla-jsp:bootRun` | http://localhost:8081 |
-| `charlla-react` | `npm run dev` (이식한 Next.js 앱에서) | http://localhost:3000/charlla-test |
+| `charlla-react` | `cd charlla-react && npm install && npm run dev` | http://localhost:3000/charlla-test |
 
-React는 파일을 기존 앱에 복사하는 방식이라 준비 단계가 따로 있다 → §2.
+셋 다 클론한 그대로 뜬다. React만 첫 실행에 `npm install` 이 한 번 필요하다.
 
 ### 1.4 환경변수
 
@@ -108,19 +108,25 @@ curl http://localhost:8080/api/account
 
 ### React (3000)
 
-`charlla-react/`는 **그 자체로 실행되는 앱이 아니다.** `package.json`도 `next.config.js`도 없는
-파일 모음이고, Gradle 빌드에도 들어 있지 않다(`settings.gradle`). 기존 Next.js 앱에 복사해 넣는다.
+`charlla-react/`는 **단독으로 뜨는 Next.js 앱이다.** 클론한 그대로 실행된다.
 
-호스트 앱이 갖추고 있어야 하는 것 — **없으면 화면이 스타일 없이 깨져 보인다:**
+```cmd
+cd charlla-react
+npm install
+npm run dev
+```
 
-| 전제 | 쓰이는 곳 |
+| 주소 | 화면 |
 |---|---|
-| **Tailwind CSS** | 두 컴포넌트의 레이아웃이 전부 유틸리티 클래스다. 없으면 클래스가 통째로 무시된다 |
-| **shadcn/ui `Button`** (`@/components/ui/button`) | `size="sm"` / `variant="outline"` 를 쓴다 |
-| shadcn 토큰 `--muted` / `--muted-foreground` | `text-muted-foreground`, `bg-muted` |
-| `@/*` path alias → `src/` | 아래 표의 import 경로가 이 전제다 |
+| `http://localhost:3000/charlla-test` | **업로드** |
+| `http://localhost:3000/charlla-test?key={contentDeployKey}` | 재생 + 제어 |
+| `http://localhost:3000/` | `/charlla-test` 로 리다이렉트 |
 
-셋 다 shadcn/ui를 쓰는 프로젝트면 이미 있는 것들이다. **깨져 보이면 코드가 아니라 이쪽을 먼저 볼 것.**
+Gradle 빌드에는 포함되지 않는다(`settings.gradle`). npm 프로젝트라 따로 띄운다.
+
+#### 기존 앱으로 이식할 때
+
+여기서 **복사해 가는 것은 컴포넌트와 그 의존 파일뿐이다.**
 
 | 파일 | 대상 위치 |
 |---|---|
@@ -131,7 +137,26 @@ curl http://localhost:8080/api/account
 | `app/charlla-test/page.tsx` | `src/app/charlla-test/page.tsx` |
 | `e2e/charlla-player.spec.ts` | `e2e/charlla-player.spec.ts` |
 
-`next.config.js`에 rewrites를 합친다 (`next.config.charlla.js` 참고).
+나머지(`package.json`, `tsconfig.json`, `next.config.js`, `tailwind.config.js`,
+`postcss.config.js`, `app/layout.tsx`, `app/globals.css`, `playwright.config.ts`)는
+**이 모듈을 단독으로 띄우기 위한 껍데기다. 복사하지 않는다.**
+
+`components/ui/button.tsx` 도 마찬가지다. 이식 대상 앱에는 보통 shadcn/ui `Button` 이 이미
+있고 import 경로(`@/components/ui/button`)가 같으므로 그대로 동작한다.
+
+대상 앱이 갖추고 있어야 하는 것 — **없으면 화면이 스타일 없이 깨져 보인다:**
+
+| 전제 | 쓰이는 곳 |
+|---|---|
+| **Tailwind CSS** | 두 컴포넌트의 레이아웃이 전부 유틸리티 클래스다. 없으면 클래스가 통째로 무시된다 |
+| **shadcn/ui `Button`** (`@/components/ui/button`) | `size="sm"` / `variant="outline"` 를 쓴다 |
+| shadcn 토큰 `--muted` / `--muted-foreground` | `text-muted-foreground`, `bg-muted` |
+| `@/*` path alias | 위 표의 import 경로가 이 전제다 |
+
+**깨져 보이면 코드가 아니라 이쪽을 먼저 볼 것.**
+
+그리고 대상 앱의 `next.config.js`에 rewrites를 합친다 (`next.config.charlla.js` 참고 —
+이 모듈의 `next.config.js`도 규칙이 갈라지지 않게 그 파일을 가져다 쓴다).
 
 ```javascript
 async rewrites() {
@@ -146,12 +171,6 @@ async rewrites() {
 ```
 
 > **기존 rewrites와 경로가 겹치지 않는지 먼저 확인할 것.** `/api/charlla/`로 네임스페이스를 뗀 이유다.
-
-```bash
-npm run dev
-# http://localhost:3000/charlla-test          → 업로드
-# http://localhost:3000/charlla-test?key=...  → 재생
-```
 
 ### 통합 테스트로 올리기
 
@@ -178,7 +197,7 @@ gradlew.bat :charlla-api:test -PincludeExternal --tests "*CharllaUploadIT" -i
 | `GET /api/contents` | 200. 페이징 필드 정상 매핑 |
 | 업로드 전송 | 성공. `{"error":0,"message":"Successfully uploaded."}` + 진행률 100% |
 | JSP 화면(8081) | 목록·업로드 화면 정상 렌더 |
-| React 화면(3000) | 정상 렌더. Next 14 앱에 이식해 확인 (전제는 §2) |
+| React 화면(3000) | 정상 렌더. `charlla-react` 단독 실행 + `npm run build` 통과 |
 | Next rewrites 프록시 | 통과. `3000 /api/charlla/contents` → `8080` → 200 |
 
 ### 막혀 있는 것
@@ -444,7 +463,7 @@ iframe 로드 완료 전 `postMessage`는 유실된다. React는 `disabled={!rea
 | 콜백에 200 미응답 | 같은 콜백 3회 재수신 | 무조건 200 |
 | 진행률 100%를 완료로 오해 | 목록에 없다고 당황 | 100%는 전송 완료. 인코딩은 그 다음 |
 | multipart 크기 기본값 | 업로드가 1MB에서 막힘 | 두 모듈 `application.yml`에 `max-file-size` 설정됨 |
-| **호스트 앱에 Tailwind/shadcn 없음** | React 화면만 스타일 없이 깨져 보임 | 코드 문제가 아니다. 전제 확인 (§2) |
+| **이식 대상 앱에 Tailwind/shadcn 없음** | React 화면만 스타일 없이 깨져 보임 | 코드 문제가 아니다. 전제 확인 (§2). 이 저장소에서 단독 실행할 때는 해당 없음 |
 | React 언마운트 시 `destroy()` 누락 | 리스너 누적 | `useEffect` cleanup |
 | `'use client'` 누락 | SSR에서 window 오류 | 플레이어·업로더 컴포넌트 필수 |
 
@@ -474,13 +493,19 @@ charlla-jsp/src/main/
         ├── upload.jsp                  업로드
         └── player.jsp                  재생 + 제어 + 이벤트 로그
 
-charlla-react/
+charlla-react/                          단독 실행되는 Next.js 앱 (npm)
 ├── lib/charlla/types.ts                ★ 액션·페이로드 타입 (기준)
 ├── lib/charlla/bridge.ts               ★ TS 브릿지
 ├── components/charlla/CharllaPlayer.tsx
 ├── components/charlla/CharllaUploader.tsx
 ├── app/charlla-test/page.tsx           업로드 + 재생
-└── e2e/charlla-player.spec.ts          Playwright
+├── e2e/charlla-player.spec.ts          Playwright
+│                                       ↑ 여기까지가 기존 앱에 복사해 가는 것 (§2)
+├── components/ui/button.tsx            단독 실행용 최소 Button. 대상 앱엔 이미 있다
+├── app/layout.tsx, app/globals.css     단독 실행용 껍데기 + shadcn 토큰
+├── next.config.charlla.js              ★ rewrites 규칙 원본 (이식 시 참고)
+└── next.config.js / tsconfig.json      단독 실행용 설정
+    tailwind.config.js / postcss.config.js / playwright.config.ts
 ```
 
 ---

@@ -10,6 +10,7 @@ import type {
   BannerItem,
   CharllaMessage,
   CharllaPlayerType,
+  EndPayload,
   LoadPayload,
   PlayerUrlResponse,
 } from '@/lib/charlla/types';
@@ -90,7 +91,7 @@ export function CharllaPlayer({
       appendLog('  ', `→ 로드 완료: ${p.title} (${p.type})`);
     });
     bridge.on('end', (payload) => {
-      appendLog('  ', `→ 재생 종료: ${(payload as { time: number }).time}초`);
+      appendLog('  ', `→ 재생 종료: ${(payload as EndPayload).time}초`);
     });
 
     // cleanup 을 빼면 언마운트 후에도 리스너가 남아 누적된다.

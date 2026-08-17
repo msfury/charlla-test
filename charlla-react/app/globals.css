@@ -1,0 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 컴포넌트가 참조하는 shadcn 디자인 토큰.
+   기존 앱에 이식할 때는 그쪽에 이미 있는 값을 쓴다. */
+:root {
+  --muted: 240 4.8% 95.9%;
+  --muted-foreground: 240 3.8% 46.1%;
+}
+
+body {
+  background: #fff;
+  color: #18181b;
+}
