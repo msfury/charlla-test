@@ -26,21 +26,57 @@
 
 ## 1. 실행 (Windows)
 
+### 1.1 사전 조건
+
+| 항목 | 값 | 비고 |
+|---|---|---|
+| JDK | **11** | `gradle.properties`의 `org.gradle.java.home`이 JAVA_HOME보다 우선해 고정한다 |
+| Gradle | **7.6.4** | 래퍼에 고정. Boot 2.7.5는 6.8/6.9/7.x만 지원한다. **IDE가 업그레이드를 권해도 따르지 말 것** |
+| Node.js | React 화면을 볼 때만 | `charlla-react`는 Gradle 빌드에 포함되지 않는다(`settings.gradle`) |
+
+Gradle은 따로 설치하지 않는다. `gradlew.bat`이 7.6.4를 받아 쓴다.
+
+### 1.2 빌드
+
 ```cmd
 cd /d D:\workspace\charlla-test
 
 gradlew.bat build
-gradlew.bat :charlla-api:bootRun
 ```
 
-API_KEY는 `application.yml`에 기본값으로 들어 있어 따로 설정하지 않아도 된다.
-바꾸려면 환경변수가 우선한다.
+### 1.3 모듈 실행
+
+**`charlla-api`가 먼저 떠 있어야 나머지 두 화면이 동작한다.** `bootRun`은 포그라운드로 물리므로
+터미널을 각각 열어 실행한다.
+
+| 모듈 | 명령 | 주소 |
+|---|---|---|
+| `charlla-api` | `gradlew.bat :charlla-api:bootRun` | http://localhost:8080 |
+| `charlla-jsp` | `gradlew.bat :charlla-jsp:bootRun` | http://localhost:8081 |
+| `charlla-react` | `npm run dev` (이식한 Next.js 앱에서) | http://localhost:3000/charlla-test |
+
+React는 파일을 기존 앱에 복사하는 방식이라 준비 단계가 따로 있다 → §2.
+
+### 1.4 환경변수
+
+전부 기본값이 있어 **설정하지 않아도 실행된다.** 바꿀 때만 지정한다.
+
+| 변수 | 모듈 | 기본값 |
+|---|---|---|
+| `CHARLLA_API_KEY` | api | `application.yml`의 연동 테스트용 키 |
+| `CHARLLA_BASE_URL` | api | `https://external-api.charlla.io` |
+| `CHARLLA_PLAYER_URL` | api | `https://player.charlla.io` |
+| `CHARLLA_API_BASE_URL` | jsp | `http://localhost:8080` |
+| `CHARLLA_API_BASE` | react (rewrite) | `http://localhost:8080` |
 
 ```cmd
 set CHARLLA_API_KEY=다른키
 ```
 
-연동 확인 — **첫 관문이다.**
+> **api 주소 변수는 모듈마다 이름이 다르다** — jsp는 `CHARLLA_API_BASE_URL`, react rewrite는
+> `CHARLLA_API_BASE`. 8080을 옮기면 둘 다 바꿀 것.
+
+### 1.5 연동 확인 — 첫 관문이다
 
 ```cmd
 curl http://localhost:8080/api/account
@@ -55,9 +91,7 @@ curl http://localhost:8080/api/account
 
 ### JSP (8081)
 
-```cmd
-gradlew.bat :charlla-jsp:bootRun
-```
+실행은 §1.3. 8080이 떠 있는 상태에서 `gradlew.bat :charlla-jsp:bootRun`.
 
 | 주소 | 화면 |
 |---|---|
