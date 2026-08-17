@@ -1,0 +1,13 @@
+apply plugin: 'war'
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+
+    // JSP. 이 두 줄이 없으면 뷰가 404 로만 뜬다.
+    implementation 'org.apache.tomcat.embed:tomcat-embed-jasper'
+    providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat'
+}
+
+// JSP 는 실행 가능한 jar 에서 동작하지 않는다. war 로만 패키징한다.
+bootJar { enabled = false }
+bootWar { enabled = true }

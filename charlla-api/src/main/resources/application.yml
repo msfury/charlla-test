@@ -1,0 +1,41 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: charlla-api
+  jackson:
+    default-property-inclusion: non_null
+  servlet:
+    multipart:
+      # 영상 파일이 이 서버를 통과한다. 기본값(1MB)이면 바로 막힌다.
+      max-file-size: 500MB
+      max-request-size: 510MB
+
+charlla:
+  # 연동 테스트용 키를 기본값으로 둔다. 환경변수 CHARLLA_API_KEY 가 있으면 그쪽이 우선한다.
+  #
+  # 주의: 이 파일은 커밋 대상이다. git 으로 관리하기 시작하면 키가 그대로 올라간다.
+  #       공유 저장소로 옮기기 전에 기본값을 지우고 ${CHARLLA_API_KEY:} 로 되돌릴 것.
+  api-key: ${CHARLLA_API_KEY:692a6a59cceb6575}
+  base-url: ${CHARLLA_BASE_URL:https://external-api.charlla.io}
+  player-url: ${CHARLLA_PLAYER_URL:https://player.charlla.io}
+  http:
+    connect-timeout-ms: 3000
+    response-timeout-ms: 30000
+    upload-timeout-ms: 600000
+  upload:
+    # 정의서 권장은 1초 이상이지만 호출 제한이 분당 60회다.
+    # 1초로 두면 이 API 하나로 한도를 다 쓴다.
+    progress-poll-interval-ms: 2000
+    progress-timeout-ms: 300000
+    max-duration-seconds: 60
+  player:
+    default-type: shoplayer
+    custom-banner: true
+    banner-link-external: true
+    share-external: true
+
+logging:
+  level:
+    com.example.charlla: DEBUG

@@ -1,0 +1,8 @@
+charlla:
+  # MockWebServer 단위 테스트는 이 값을 쓰지 않는다 (자체 상수를 쓴다).
+  # 실서버를 호출하는 CharllaUploadIT 만 이 키가 필요해서 기본값으로 둔다.
+  # 환경변수 CHARLLA_API_KEY 가 있으면 그쪽이 우선한다.
+  # 주의: 커밋 대상 파일이다. 공유 저장소로 옮기기 전에 기본값을 지울 것.
+  api-key: ${CHARLLA_API_KEY:692a6a59cceb6575}
+  base-url: ${CHARLLA_BASE_URL:https://external-api.charlla.io}
+  player-url: ${CHARLLA_PLAYER_URL:https://player.charlla.io}
