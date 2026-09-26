@@ -11,6 +11,8 @@
 | `charlla-jsp` | Spring Boot + JSP | 8081 | **war** |
 | `charlla-react` | Next.js + TS (기존 프론트에 넣을 파일) | 3000 | — |
 
+`charlla-react/kollus-player/`에는 기존 **콜러스 iframe 플레이어를 `<video>` 직접 재생으로 바꾼 코드**가 있다(§10).
+
 ```
 브라우저 ──▶ JSP(8081) ──┐
                           ├──▶ charlla-api(8080) ──▶ external-api.charlla.io
@@ -504,8 +506,15 @@ charlla-react/                          단독 실행되는 Next.js 앱 (npm)
 ├── components/ui/button.tsx            단독 실행용 최소 Button. 대상 앱엔 이미 있다
 ├── app/layout.tsx, app/globals.css     단독 실행용 껍데기 + shadcn 토큰
 ├── next.config.charlla.js              ★ rewrites 규칙 원본 (이식 시 참고)
-└── next.config.js / tsconfig.json      단독 실행용 설정
-    tailwind.config.js / postcss.config.js / playwright.config.ts
+├── next.config.js / tsconfig.json      단독 실행용 설정
+│   tailwind.config.js / postcss.config.js / playwright.config.ts
+│
+│   ── 콜러스 플레이어 교체 (§10). 대상 앱과 같은 경로, 이 앱 빌드에서는 제외 ──
+└── kollus-player/
+    ├── README.md                                           ★ 원인·해결·이식·옵션·확인 방법
+    ├── KOLLUS_NETWORK_ISSUE.md                             조사 기록 원본 (시도한 방법, 근거, 사내 확인 결과)
+    ├── components/player/catenoid-player/kollus-player.tsx ★ 대상 앱의 같은 파일을 통째로 교체
+    └── app/api/player/kollus-stream-url/route.ts           ★ 대상 앱에 새로 추가 (SR링크 서버 호출)
 ```
 
 ---
@@ -519,3 +528,17 @@ charlla-react/                          단독 실행되는 Next.js 앱 (npm)
 
 **주의: 공개 문서(support.charlla.io)에는 External API 레퍼런스가 없다.**
 스펙 근거는 swagger와 정의서 PDF뿐이다. 웹 검색으로 확인하려 하지 말 것.
+
+---
+
+## 10. 콜러스 플레이어 교체 (iframe → `<video>`)
+
+사내망에서 콜러스 iframe 플레이어의 CDN 요청이 404로 재생되지 않던 문제를 코드만으로 푼 것이다.
+원인은 브라우저의 HTTP/2 연결 재사용이다. 콜러스 도메인이 사내 게이트서버 IP 하나에 묶여 있고 인증서가 와일드카드라서,
+CDN 요청이 `v.kr.kollus.com` 연결에 실려 엉뚱한 서버로 간다.
+
+- 해결: 서버가 콜러스 **SR링크**(`/s` → `/sr`)로 스트림 주소를 받고, 브라우저는 CDN(HTTP/1.1)에만 연결한다. 오디오는 서버가 흘려 준다.
+- 대상 앱에 옮길 파일은 2개다: `kollus-player.tsx`(교체), `route.ts`(추가). 부르는 쪽은 고치지 않는다.
+- 사내망 적용 완료 (2026-09-27): 영상, 오디오, 재생바·음량바, 배속, 전체화면.
+
+자세한 내용은 [`charlla-react/kollus-player/README.md`](charlla-react/kollus-player/README.md).
